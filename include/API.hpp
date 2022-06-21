@@ -4,6 +4,7 @@ void setGPIO(String id, bool state)
    Serial.print(id);
    Serial.print(": ");
    Serial.println(state);
+   digitalWrite(LED_BUILTIN, state);
 }
 
 void setPWM(String id, int pwm)

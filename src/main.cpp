@@ -40,6 +40,7 @@ void setup(void)
   InitWebSockets();
 
   pinMode(IO0, INPUT_PULLUP);
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 uint8_t actState = 0;
