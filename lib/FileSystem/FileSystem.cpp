@@ -5,7 +5,7 @@
    https://github.com/lorol/arduino-esp32littlefs-plugin */
 #define FORMAT_LITTLEFS_IF_FAILED false
 
-FileSystem::FileSystem(){
+FileSystem_::FileSystem_(){
     if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
         Serial.println("LittleFS Mount Failed");
         return;
@@ -13,7 +13,7 @@ FileSystem::FileSystem(){
 } 
 
 
-void FileSystem::listDir(fs::FS &fs, const char * dirname, uint8_t levels){
+void FileSystem_::listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\r\n", dirname);
 
     File root = fs.open(dirname);
@@ -61,7 +61,7 @@ void FileSystem::listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     }
 }
 
-void FileSystem::createDir(fs::FS &fs, const char * path){
+void FileSystem_::createDir(fs::FS &fs, const char * path){
     Serial.printf("Creating Dir: %s\n", path);
     if(fs.mkdir(path)){
         Serial.println("Dir created");
@@ -70,7 +70,7 @@ void FileSystem::createDir(fs::FS &fs, const char * path){
     }
 }
 
-void FileSystem::removeDir(fs::FS &fs, const char * path){
+void FileSystem_::removeDir(fs::FS &fs, const char * path){
     Serial.printf("Removing Dir: %s\n", path);
     if(fs.rmdir(path)){
         Serial.println("Dir removed");
@@ -79,7 +79,7 @@ void FileSystem::removeDir(fs::FS &fs, const char * path){
     }
 }
 
-void FileSystem::readFile(fs::FS &fs, const char * path){
+void FileSystem_::readFile(fs::FS &fs, const char * path){
     Serial.printf("Reading file: %s\r\n", path);
 
     File file = fs.open(path);
@@ -95,7 +95,7 @@ void FileSystem::readFile(fs::FS &fs, const char * path){
     file.close();
 }
 
-void FileSystem::writeFile(fs::FS &fs, const char * path, const char * message){
+void FileSystem_::writeFile(fs::FS &fs, const char * path, const char * message){
     Serial.printf("Writing file: %s\r\n", path);
 
     File file = fs.open(path, FILE_WRITE);
@@ -111,7 +111,7 @@ void FileSystem::writeFile(fs::FS &fs, const char * path, const char * message){
     file.close();
 }
 
-void FileSystem::appendFile(fs::FS &fs, const char * path, const char * message){
+void FileSystem_::appendFile(fs::FS &fs, const char * path, const char * message){
     Serial.printf("Appending to file: %s\r\n", path);
 
     File file = fs.open(path, FILE_APPEND);
@@ -127,7 +127,7 @@ void FileSystem::appendFile(fs::FS &fs, const char * path, const char * message)
     file.close();
 }
 
-void FileSystem::renameFile(fs::FS &fs, const char * path1, const char * path2){
+void FileSystem_::renameFile(fs::FS &fs, const char * path1, const char * path2){
     Serial.printf("Renaming file %s to %s\r\n", path1, path2);
     if (fs.rename(path1, path2)) {
         Serial.println("- file renamed");
@@ -136,7 +136,7 @@ void FileSystem::renameFile(fs::FS &fs, const char * path1, const char * path2){
     }
 }
 
-void FileSystem::deleteFile(fs::FS &fs, const char * path){
+void FileSystem_::deleteFile(fs::FS &fs, const char * path){
     Serial.printf("Deleting file: %s\r\n", path);
     if(fs.remove(path)){
         Serial.println("- file deleted");
@@ -145,7 +145,7 @@ void FileSystem::deleteFile(fs::FS &fs, const char * path){
     }
 }
 
-void FileSystem::testFileIO(fs::FS &fs, const char * path){
+void FileSystem_::testFileIO(fs::FS &fs, const char * path){
     Serial.printf("Testing file I/O with %s\r\n", path);
 
     static uint8_t buf[512];
@@ -199,6 +199,9 @@ void FileSystem::testFileIO(fs::FS &fs, const char * path){
     }
 }
 
-FileSystem::~FileSystem(){
-
+FileSystem_ &FileSystem_::getInstance() {
+  static FileSystem_ instance;
+  return instance;
 }
+
+FileSystem_ &Files = Files.getInstance();

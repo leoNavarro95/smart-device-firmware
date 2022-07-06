@@ -1,42 +1,25 @@
 #pragma once
 
-class Gpio {
-    public:
-    Gpio() = default;
-    virtual ~Gpio() = default;
+#include<ArduinoJson.h>
 
-    private:
-    uint8_t id;
-    std::shared_ptr<PinNumber> pin_number;
-    std::shared_ptr<bool> used;
+// Singleton pattern. In case of use a RTOS, need to be managed to be thread safe
+class DB_Manager_ {
 
-    public:
-    /**
-     * An id for computer
-     */
-    uint8_t get_id() const { return id; }
-    void set_id(std::shared_ptr<double> value) { this->id = value; }
+private:
+    DB_Manager_() = default;
 
-    /**
-     * The labeled number of the GPIO
-     */
-    std::shared_ptr<PinNumber> get_pin_number() const { return pin_number; }
-    void set_pin_number(std::shared_ptr<PinNumber> value) { this->pin_number = value; }
+public:
+    static DB_Manager_ &getInstance(); // Accessor for singleton instance
 
-    /**
-     * Indicate if the GPIO it's already selected by the user
-     */
-    std::shared_ptr<bool> get_used() const { return used; }
-    void set_used(std::shared_ptr<bool> value) { this->used = value; }
+    DB_Manager_(const DB_Manager_ &) = delete; // no copying
+    DB_Manager_ &operator=(const DB_Manager_ &) = delete;
+
+public:
+    void begin();
+    void doStuff();    
 };
 
-
-class DB_Handler{
-    public:
-    DB_Handler();
-    void 
-    
-};
+extern DB_Manager_ &DB;
 
 
 /*

@@ -3,13 +3,12 @@
 
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
+// #include <ArduinoJson.h>
 
 #include "FileSystem.h"
-//#include "DB_Handler.h"
+#include "DB_Manager.h"
 #include"SmartDevice_Model.hpp"
 
-// TODO: Encontrar forma que no sea harcodeando los password e ssid
 #include "config.h"  // Sustituir con datos de la red 
 #include "API.hpp"
 #include "WebSockets.hpp"
@@ -20,12 +19,13 @@
 
 #define IO0 0
 
-FileSystem myFS;
 SmartDevice sdevice;
 
 void setup(void)
 {
   Serial.begin(115200);
+  
+  DB.begin();
 
   sdevice.set_mac("00:00:5e:00:53:af");
   sdevice.set_ap_ssid("mySSID");
@@ -65,14 +65,14 @@ void setup(void)
   
 
 
-  myFS.listDir(LittleFS, "/", (uint8_t) 0);
+  Files.listDir(LittleFS, "/", (uint8_t) 0);
 
-/*
+
   ConnectWiFi_STA();
 
   InitServer();
   InitWebSockets();
-*/
+
   pinMode(IO0, INPUT_PULLUP);
   pinMode(LED_BUILTIN, OUTPUT);
 }
@@ -82,7 +82,9 @@ uint8_t prevState = 0;
 
 
 void loop(void)
-{ /*
+{ 
+  DB.doStuff();
+  /*
   actState = digitalRead(IO0);
 
   if(prevState != actState){
