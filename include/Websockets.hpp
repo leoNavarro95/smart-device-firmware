@@ -1,3 +1,5 @@
+#include<ArduinoJson.h>
+
 AsyncWebSocket ws("/ws");
 
 void ProcessRequest(AsyncWebSocketClient *client, String request)
