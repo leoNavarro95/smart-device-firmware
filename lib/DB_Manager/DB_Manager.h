@@ -1,6 +1,5 @@
 #pragma once
 
-#include<ArduinoJson.h>
 
 // Singleton pattern. In case of use a RTOS, need to be managed to be thread safe
 class DB_Manager_ {
@@ -16,7 +15,7 @@ public:
 
 public:
     void begin();
-    void doStuff();    
+    void getUsedGPIOS();
 };
 
 extern DB_Manager_ &DB;
