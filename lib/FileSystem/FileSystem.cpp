@@ -3,26 +3,24 @@
 /* You only need to format LittleFS the first time you run a
    test or else use the LittleFS plugin to create a partition
    https://github.com/lorol/arduino-esp32littlefs-plugin */
-#define FORMAT_LITTLEFS_IF_FAILED false
-
-FileSystem_::FileSystem_(){
-    if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
-        Serial.println("LittleFS Mount Failed");
+void FileSystem_::begin( bool formatIfFailed ){
+    if(!LittleFS.begin(formatIfFailed)){
+        Serial.println("[Files][E]- LittleFS Mount Failed");
         return;
     }
 } 
 
 
 void FileSystem_::listDir(fs::FS &fs, const char * dirname, uint8_t levels){
-    Serial.printf("Listing directory: %s\r\n", dirname);
+    Serial.printf("[Files][i]- Listing directory: %s\r\n", dirname);
 
     File root = fs.open(dirname);
     if(!root){
-        Serial.println("- failed to open directory");
+        Serial.println("[Files][E]- failed to open directory");
         return;
     }
     if(!root.isDirectory()){
-        Serial.println(" - not a directory");
+        Serial.println("[Files][i]- not a directory");
         return;
     }
 
@@ -62,102 +60,104 @@ void FileSystem_::listDir(fs::FS &fs, const char * dirname, uint8_t levels){
 }
 
 void FileSystem_::createDir(fs::FS &fs, const char * path){
-    Serial.printf("Creating Dir: %s\n", path);
+    Serial.printf("[Files][i]- Creating Dir: %s\n", path);
     if(fs.mkdir(path)){
-        Serial.println("Dir created");
+        Serial.println("[Files][i]- Dir created");
     } else {
-        Serial.println("mkdir failed");
+        Serial.println("[Files][E]- mkdir failed");
     }
 }
 
 void FileSystem_::removeDir(fs::FS &fs, const char * path){
-    Serial.printf("Removing Dir: %s\n", path);
+    Serial.printf("[Files][i]- Removing Dir: %s\n", path);
     if(fs.rmdir(path)){
-        Serial.println("Dir removed");
+        Serial.println("[Files][i]- Dir removed");
     } else {
-        Serial.println("rmdir failed");
+        Serial.println("[Files][E] rmdir failed");
     }
 }
 
-void FileSystem_::readFile(fs::FS &fs, const char * path){
-    Serial.printf("Reading file: %s\r\n", path);
+// Reads the file defined by path. If success return string with content of file, else return empty string ("")
+String FileSystem_::readFile(fs::FS &fs, const char * path){
+    Serial.printf("[Files][i]- Reading file: %s\r\n", path);
 
     File file = fs.open(path);
     if(!file || file.isDirectory()){
-        Serial.println("- failed to open file for reading");
-        return;
+        Serial.println("[Files][E]- failed to open file for reading");
+        return "";
     }
 
-    Serial.println("- read from file:");
+    String data;
     while(file.available()){
-        Serial.write(file.read());
+        data += (char) file.read();
     }
     file.close();
+    return data;
 }
 
 void FileSystem_::writeFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Writing file: %s\r\n", path);
+    Serial.printf("[Files][i]- Writing file: %s\r\n", path);
 
     File file = fs.open(path, FILE_WRITE);
     if(!file){
-        Serial.println("- failed to open file for writing");
+        Serial.println("[Files][E]- failed to open file for writing");
         return;
     }
     if(file.print(message)){
-        Serial.println("- file written");
+        Serial.println("[Files][i]- file written");
     } else {
-        Serial.println("- write failed");
+        Serial.println("[Files][E]- write failed");
     }
     file.close();
 }
 
 void FileSystem_::appendFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Appending to file: %s\r\n", path);
+    Serial.printf("[Files][i]- Appending to file: %s\r\n", path);
 
     File file = fs.open(path, FILE_APPEND);
     if(!file){
-        Serial.println("- failed to open file for appending");
+        Serial.println("[Files][E]- failed to open file for appending");
         return;
     }
     if(file.print(message)){
-        Serial.println("- message appended");
+        Serial.println("[Files][i]- message appended");
     } else {
-        Serial.println("- append failed");
+        Serial.println("[Files][E]- append failed");
     }
     file.close();
 }
 
 void FileSystem_::renameFile(fs::FS &fs, const char * path1, const char * path2){
-    Serial.printf("Renaming file %s to %s\r\n", path1, path2);
+    Serial.printf("[Files][i]- Renaming file %s to %s\r\n", path1, path2);
     if (fs.rename(path1, path2)) {
-        Serial.println("- file renamed");
+        Serial.println("[Files][i]- file renamed");
     } else {
-        Serial.println("- rename failed");
+        Serial.println("[Files][E]- rename failed");
     }
 }
 
 void FileSystem_::deleteFile(fs::FS &fs, const char * path){
-    Serial.printf("Deleting file: %s\r\n", path);
+    Serial.printf("[Files][i]- Deleting file: %s\r\n", path);
     if(fs.remove(path)){
-        Serial.println("- file deleted");
+        Serial.println("[Files][i]- file deleted");
     } else {
-        Serial.println("- delete failed");
+        Serial.println("[Files][E]- delete failed");
     }
 }
 
 void FileSystem_::testFileIO(fs::FS &fs, const char * path){
-    Serial.printf("Testing file I/O with %s\r\n", path);
+    Serial.printf("[Files][i]-Testing file I/O with %s\r\n", path);
 
     static uint8_t buf[512];
     size_t len = 0;
     File file = fs.open(path, FILE_WRITE);
     if(!file){
-        Serial.println("- failed to open file for writing");
+        Serial.println("[Files][E]- failed to open file for writing");
         return;
     }
 
     size_t i;
-    Serial.print("- writing" );
+    Serial.print("[Files][i]- writing" );
     uint32_t start = millis();
     for(i=0; i<2048; i++){
         if ((i & 0x001F) == 0x001F){
@@ -167,7 +167,7 @@ void FileSystem_::testFileIO(fs::FS &fs, const char * path){
     }
     Serial.println("");
     uint32_t end = millis() - start;
-    Serial.printf(" - %u bytes written in %u ms\r\n", 2048 * 512, end);
+    Serial.printf("[Files][i]- %u bytes written in %u ms\r\n", 2048 * 512, end);
     file.close();
 
     file = fs.open(path);
@@ -178,7 +178,7 @@ void FileSystem_::testFileIO(fs::FS &fs, const char * path){
         len = file.size();
         size_t flen = len;
         start = millis();
-        Serial.print("- reading" );
+        Serial.print("[Files][i]- reading" );
         while(len){
             size_t toRead = len;
             if(toRead > 512){
@@ -192,10 +192,10 @@ void FileSystem_::testFileIO(fs::FS &fs, const char * path){
         }
         Serial.println("");
         end = millis() - start;
-        Serial.printf("- %u bytes read in %u ms\r\n", flen, end);
+        Serial.printf("[Files][i]- %u bytes read in %u ms\r\n", flen, end);
         file.close();
     } else {
-        Serial.println("- failed to open file for reading");
+        Serial.println("[Files][E]- failed to open file for reading");
     }
 }
 
