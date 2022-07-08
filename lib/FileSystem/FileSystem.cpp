@@ -88,10 +88,23 @@ String FileSystem_::readFile(fs::FS &fs, const char * path){
     }
 
     String data;
+
+    // uint8_t size = file.size() + 1;
+    // Serial.printf("file size: %d\n", size);
+
+    // char _data[size];
+    // uint8_t index = 0;
     while(file.available()){
         data += (char) file.read();
+        // _data[index] = (char) file.read();
+        // index++;
     }
     file.close();
+    // Serial.printf("index: %d\n", index);
+    // Serial.printf("_data: %s\n", _data);
+
+    // char* data = &_data[0];
+    // char* data = "Fake data";
     return data;
 }
 

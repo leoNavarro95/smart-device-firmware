@@ -1,9 +1,9 @@
-#include <Arduino.h>
 
+
+#include <Arduino.h>
 
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
-// #include <ArduinoJson.h>
 
 #include "FileSystem.h"
 #include "DB_Manager.h"
@@ -21,12 +21,12 @@
 
 SmartDevice sdevice;
 
+
 void setup(void)
 {
   Serial.begin(115200);
   
-  DB.begin();
-
+/*
   sdevice.set_mac("00:00:5e:00:53:af");
   sdevice.set_ap_ssid("mySSID");
   sdevice.set_ap_pass("1234");
@@ -63,10 +63,11 @@ void setup(void)
     Serial.println("================");
   }
   
-
-
+*/
+  Files.begin();
   Files.listDir(LittleFS, "/", (uint8_t) 0);
-
+  
+  DB.getUsedGPIOS();
 
   ConnectWiFi_STA();
 
@@ -83,7 +84,6 @@ uint8_t prevState = 0;
 
 void loop(void)
 { 
-  DB.doStuff();
   /*
   actState = digitalRead(IO0);
 

@@ -4,58 +4,56 @@
 #include<ArduinoJson.h>
 #include "FileSystem.h"
 
-void DB_Manager_::begin() {
-  pinMode(LED_BUILTIN, OUTPUT);
+//TODO OJO ver herramienta para trabajar con arduinojson https://arduinojson.org/v6/assistant
 
-  // blink the led a few times
-  for (int i = 0; i < 5; i++) {
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(100);
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
-  }
+//TODO Ver MessagePack como alternativa para empaquetar los JSON: https://msgpack.org/index.html
+// ArduinoJson es compatible con MessagePack
 
-  digitalWrite(LED_BUILTIN, LOW);
-}
+
 
 void DB_Manager_::getUsedGPIOS(){
-    String readJSON = Files.readFile(LittleFS, "/database/esp_soc.json");
-    Serial.println(readJSON);
-    
-    /*
-    if(readJSON == "ERROR"){
-        Serial.print("Error leyendo archivo");
-        
-        String paqueteJSON;
-        StaticJsonDocument<300> doc;
-        doc["ssid"] = SSID;
-        doc["id"] = 1;//1 indica que es por defecto, 2 que es custom
-        doc["pass"] = PASSWORD;
-        serializeJson(doc, paqueteJSON);//en paqueteJSON ya esta serializado el Json con los respectivos campos llenos
+  String readJSON = Files.readFile(LittleFS, "/database/esp_soc.json");
+  // char * readJSON = Files.readFile(LittleFS, "/test.txt");
+  Serial.printf("Valor leido: %s\n", readJSON.c_str());
+  
+  StaticJsonDocument<2048> doc;
 
-        // char paketeChar[paqueteJSON.length() + 1];
-        // strcpy(paketeChar, paqueteJSON.c_str()); //convierte el packete en string a char array
-        Serial.println("Guardando paquete de config: " + paqueteJSON);
-        writeFile(LittleFS, "/config.json", paqueteJSON.c_str());
-    }
-    else{
-        StaticJsonDocument<300> doc;
-        DeserializationError error = deserializeJson(doc, readJSON);
-        if (error) { Serial.println("Error de parseado de Json"); return;}
-        SSID = doc["ssid"] | "Sistema Manati ApError";//obtiene el valor de la etiqueta ssid, si no existe se settea una por defecto
-        PASSWORD = doc["pass"] | "Administrador";
-        int id = (int)doc["id"] | 1;
-        if(id == 1)     Serial.println("Advertencia está usando configuración por defecto");
+  DeserializationError error = deserializeJson(doc, readJSON);
 
-        NIVEL_ALTO = doc["nivelMaximo"] | 100;
-        NIVEL_BAJO = doc["nivelMinimo"] | 70;
-        UMBRAL_FLUJO = doc["flujoMinimo"] | 5;
+  if (error) {
+    Serial.print("[DB][E] deserializeJson() failed: ");
+    Serial.println(error.c_str());
+    return;
+  }
 
-        Serial.println("##1");
-        Serial.println(String(NIVEL_ALTO) + " " + String(NIVEL_BAJO) + " " + String(UMBRAL_FLUJO));
-        Serial.println("##1");
-    }
-    */
+  const char* mac = doc["mac"]; // "00:00:5e:00:53:af"
+  const char* ap_ssid = doc["ap_ssid"]; // "admin"
+  const char* ap_pass = doc["ap_pass"]; // "admin"
+  const char* sta_ssid = doc["sta_ssid"]; // nullptr
+  const char* sta_pass = doc["sta_pass"]; // nullptr
+  const char* connection_mode = doc["connection_mode"]; // "AP"
+
+  Serial.printf("mac: %s\n", mac);
+
+  JsonObject ip_config = doc["ip_config"];
+  const char* ip_config_mode = ip_config["mode"]; // "Dynamic"
+  const char* ip_config_ip_address = ip_config["ip_address"]; // "192.168.1.234"
+  const char* ip_config_subred_mask_address = ip_config["subred_mask_address"]; // "255.255.255.0"
+  const char* ip_config_gateway_address = ip_config["gateway_address"]; // "192.168.1.1"
+
+  for (JsonObject used_gpio : doc["used_gpios"].as<JsonArray>()) {
+    int used_gpio_id = used_gpio["id"]; // 0, 1
+    int used_gpio_pin_number = used_gpio["pin_number"]; // 0, 25
+    const char* used_gpio_mode = used_gpio["mode"]; // "INPUT", "OUTPUT"
+    const char* used_gpio_label = used_gpio["label"]; // "Button on board", "LED on board"
+    const char* used_gpio_value = used_gpio["value"]; // "LOW", "LOW"
+  }
+
+  for (JsonObject gpio : doc["gpios"].as<JsonArray>()) {
+    int gpio_id = gpio["id"]; // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+    int gpio_pin_number = gpio["pin_number"]; // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ...
+    bool gpio_used = gpio["used"]; // true, false, false, false, false, false, false, false, false, false, ...
+  }
 }
 
 DB_Manager_ &DB_Manager_::getInstance() {

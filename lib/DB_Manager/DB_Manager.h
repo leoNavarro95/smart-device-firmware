@@ -14,7 +14,6 @@ public:
     DB_Manager_ &operator=(const DB_Manager_ &) = delete;
 
 public:
-    void begin();
     void getUsedGPIOS();
 };
 
