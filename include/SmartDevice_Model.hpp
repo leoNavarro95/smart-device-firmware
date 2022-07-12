@@ -1,8 +1,15 @@
 #pragma once
 
-#include <optional>
-#include <stdexcept>
-#include <regex>
+#define SIZE_MAC 17
+#define MAX_SIZE_MODE 8
+#define MAX_SIZE_CONN_MODE 4
+#define MAX_SIZE_LABEL 16
+#define MAX_SIZE_VALUE 8
+#define MAX_SIZE_SSID 32
+#define MAX_SIZE_PASS 31
+
+#define MAX_SIZE_USED_GPIOS 30
+#define SIZE_GPIOS 30
 
 class Gpio {
     public:
@@ -63,9 +70,9 @@ class UsedGpio {
     private:
     uint8_t id;
     uint8_t pin_number;
-    const char* mode;
-    const char* label;
-    const char* value;
+    char mode[MAX_SIZE_MODE + 1];     //OUTPUT | INPUT | ANALOG | PWM...
+    char label[MAX_SIZE_LABEL + 1];    //Bombillo sala
+    char value[MAX_SIZE_VALUE + 1];    // ON | OFF | true | false | 1023 | 255
 
     public:
     const uint8_t & get_id() const { return id; }
@@ -77,13 +84,13 @@ class UsedGpio {
     void set_pin_number(const uint8_t & value) { this->pin_number = value; }
 
     const char * get_mode() { return mode; }
-    void set_mode(const char * value) { this->mode = value; }
+    void set_mode(const char * value) { strcpy(this->mode, value); }
 
     const char * get_label() { return label; }
-    void set_label(const char * value) { this->label = value; }
+    void set_label(const char * value) { strcpy(this->label, value); }
 
     const char * get_value() { return value; }
-    void set_value(const char * value) { this->value = value; }
+    void set_value(const char * value) { strcpy(this->value, value); }
 };
 
 class SmartDevice {
@@ -92,34 +99,33 @@ class SmartDevice {
     virtual ~SmartDevice() = default;
 
     private:
-    char mac[18]; //11:00:5e:00:53:af
-    const char * ap_ssid;
-    const char * ap_pass;
-    const char * sta_ssid;
-    const char * sta_pass;
+    char mac[SIZE_MAC + 1]; //11:00:5e:00:53:af
+    char ap_ssid[MAX_SIZE_SSID + 1];
+    char ap_pass[MAX_SIZE_PASS + 1];
+    char sta_ssid[MAX_SIZE_SSID + 1];
+    char sta_pass[MAX_SIZE_PASS + 1];
     // TODO: mode multiAP
-    char connection_mode [5]; // 'STA'|'AP' 
+    char connection_mode [MAX_SIZE_CONN_MODE + 1]; // 'STA'|'AP' 
     
     IpConfig ip_config;
-    UsedGpio * used_gpios;
-    Gpio * gpios;
+    UsedGpio used_gpios[MAX_SIZE_USED_GPIOS];
+    Gpio gpios[SIZE_GPIOS];
 
     public:
-    // char* get_mutable_mac() { return mac; }
     const char* get_mac() const { return mac; }
-    void set_mac(const char* value) { strcpy(this->mac, value);}
+    void set_mac(const char * value) { strcpy(this->mac, value);}
 
     const char * get_ap_ssid() { return ap_ssid; }
-    void set_ap_ssid(const char * value) { this->ap_ssid = value; }
+    void set_ap_ssid(const char * value) { strcpy(this->ap_ssid, value); }
 
     const char * get_ap_pass() { return ap_pass; }
-    void set_ap_pass(const char * value) { this->ap_pass = value; }
+    void set_ap_pass(const char * value) { strcpy(this->ap_pass, value); }
 
     const char * get_sta_ssid() { return sta_ssid; }
-    void set_sta_ssid(const char * value) { this->sta_ssid = value; }
+    void set_sta_ssid(const char * value) { strcpy(this->sta_ssid, value); }
 
     const char * get_sta_pass() { return sta_pass; }
-    void set_sta_pass(const char * value) { this->sta_pass = value; }
+    void set_sta_pass(const char * value) { strcpy(this->sta_pass, value); }
 
     const char* get_connection_mode() const { return connection_mode; }
     void set_connection_mode(const char* value) { strcpy(this->connection_mode, value);}
@@ -129,10 +135,27 @@ class SmartDevice {
     void set_ip_config(const IpConfig & value) { this->ip_config = value; }
     
     UsedGpio* get_used_gpios() { return used_gpios;}
-    void set_used_gpios(UsedGpio* value) { this-> used_gpios = value;}
+    
+    void set_used_gpios(UsedGpio* value, uint8_t size) {
+        if(size > MAX_SIZE_USED_GPIOS){
+            Serial.printf("[SmartD][E]- UsedGpio array size is bigger than reserved");
+            return;
+        } 
+        for(int i = 0; i < MAX_SIZE_USED_GPIOS; i++){
+            this-> used_gpios[i] = value[i];
+        }
+    }
 
     Gpio* get_gpios() { return gpios; }
-    void set_gpios(Gpio* value) { this-> gpios = value; }
+    void set_gpios(Gpio* value, uint8_t size) { 
+        if(size > SIZE_GPIOS){
+            Serial.printf("[SmartD][E]- Gpio array size is bigger than reserved");
+            return;
+        }
+        for(int i = 0; i < SIZE_GPIOS; i++){
+            this-> gpios[i] = value[i];
+        }
+    }
 
     // const std::vector<UsedGpio> & get_used_gpios() const { return used_gpios; }
     // std::vector<UsedGpio> & get_mutable_used_gpios() { return used_gpios; }

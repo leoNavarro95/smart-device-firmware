@@ -20,7 +20,7 @@ public:
     DB_Manager_ &operator=(const DB_Manager_ &) = delete;
 
     bool begin( const char* database_path);
-    void initDeviceFromDB(SmartDevice *sDevice);
+    void initDeviceFromDB(SmartDevice &sDevice);
 
     const uint8_t & get_size_used_gpios() const { return size_used_gpios; }
     void set_size_used_gpios(const uint8_t & value) { this->size_used_gpios = value; }

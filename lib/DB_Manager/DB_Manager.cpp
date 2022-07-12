@@ -28,25 +28,25 @@ bool DB_Manager_::begin(const char* database_path){
   return true; //success
 }
 
-void DB_Manager_::initDeviceFromDB(SmartDevice *sDevice){
+void DB_Manager_::initDeviceFromDB(SmartDevice &sDevice){
 
-  sDevice->set_ap_pass(doc["ap_pass"]);
-  sDevice->set_ap_ssid(doc["ap_ssid"]);
-  sDevice->set_connection_mode(doc["connection_mode"]);
-  sDevice->set_mac(doc["mac"]);
-  sDevice->set_sta_ssid(doc["sta_ssid"]);
-  sDevice->set_sta_pass(doc["sta_pass"]);
+  sDevice.set_ap_pass(this->doc["ap_pass"]);
+  sDevice.set_ap_ssid(this->doc["ap_ssid"]);
+  sDevice.set_connection_mode(this->doc["connection_mode"]);
+  sDevice.set_mac(this->doc["mac"]);
+  sDevice.set_sta_ssid(this->doc["sta_ssid"]);
+  sDevice.set_sta_pass(this->doc["sta_pass"]);
 
-  JsonObject ip_config = doc["ip_config"];
+  JsonObject ip_config = this->doc["ip_config"];
   IpConfig ipConfig;
   ipConfig.set_mode(ip_config["mode"]);
   ipConfig.set_ip_address(ip_config["ip_address"]);
   ipConfig.set_subred_mask_address(ip_config["subred_mask_address"]);
   ipConfig.set_gateway_address(ip_config["gateway_address"]);
   
-  sDevice->set_ip_config(ipConfig);
+  sDevice.set_ip_config(ipConfig);
 
-  JsonArray used_gpios_from_doc = doc["used_gpios"].as<JsonArray>();
+  JsonArray used_gpios_from_doc = this->doc["used_gpios"].as<JsonArray>();
   size_t size_used_gpios = used_gpios_from_doc.size();
   this->set_size_used_gpios(size_used_gpios);  //TODO: probably have to set this in begin method
   UsedGpio usedGpios[size_used_gpios];
@@ -63,24 +63,11 @@ void DB_Manager_::initDeviceFromDB(SmartDevice *sDevice){
     index++;
   }
 
-  sDevice->set_used_gpios(usedGpios);
+  sDevice.set_used_gpios(usedGpios, size_used_gpios);
 
-
-  UsedGpio *usedGpios2 = sDevice->get_used_gpios();
-
-  for(int i = 0; i < size_used_gpios; i++){
-    Serial.println("----------------------------------");
-    Serial.printf("id: %d\n", usedGpios2[i].get_id());
-    Serial.printf("pin: %d\n", usedGpios2[i].get_pin_number());
-    Serial.printf("mode: %s\n", usedGpios2[i].get_mode());
-    Serial.printf("label: %s\n", usedGpios2[i].get_label());
-    Serial.printf("value: %s\n", usedGpios2[i].get_value());
-    Serial.println("----------------------------------");
-    Serial.println();
-  }
-
-  JsonArray gpios_from_doc = doc["gpios"].as<JsonArray>();
+  JsonArray gpios_from_doc = this->doc["gpios"].as<JsonArray>();
   size_t size_gpios = gpios_from_doc.size();
+  
   Serial.printf("gpio size: %d\n\n", size_gpios);
   this->set_size_gpios(size_gpios);  //TODO: probably have to set this in begin method
   Gpio gpios[size_gpios];
@@ -92,7 +79,7 @@ void DB_Manager_::initDeviceFromDB(SmartDevice *sDevice){
     gpios[index].set_used(gpio["used"]);
     index++;
   }
-  sDevice->set_gpios(gpios);
+  sDevice.set_gpios(gpios, size_gpios);
 
 }
 

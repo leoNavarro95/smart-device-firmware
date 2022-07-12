@@ -88,6 +88,13 @@
             "mode": "OUTPUT",
             "label": "Relay Lamp",
             "value": "HIGH"
+        },
+        {
+            "id": 11,
+            "pin_number": 8,
+            "label": "16 caracteres je",
+            "mode": "8 aquiii",
+            "value": "HIGH"
         }
     ],
     "gpios": [
