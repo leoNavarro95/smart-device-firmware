@@ -1,59 +1,99 @@
 #include "DB_Manager.h"
 #include <Arduino.h>
 
-#include<ArduinoJson.h>
+
 #include "FileSystem.h"
 
-//TODO OJO ver herramienta para trabajar con arduinojson https://arduinojson.org/v6/assistant
+
+//Codigo apoyado por herramienta https://arduinojson.org/v6/assistant
 
 //TODO Ver MessagePack como alternativa para empaquetar los JSON: https://msgpack.org/index.html
 // ArduinoJson es compatible con MessagePack
 
+// TODO ver esta lib que permite trabajar con Streams sobre archivos https://github.com/bblanchon/ArduinoStreamUtils 
 
 
-void DB_Manager_::getUsedGPIOS(){
-  String readJSON = Files.readFile(LittleFS, "/database/esp_soc.json");
-  // char * readJSON = Files.readFile(LittleFS, "/test.txt");
-  Serial.printf("Valor leido: %s\n", readJSON.c_str());
+
+bool DB_Manager_::begin(const char* database_path){
+  String readJSON = Files.readFile(LittleFS, database_path);
+  // Serial.printf("contenido del archivo: %s\n", readJSON.c_str());
   
-  StaticJsonDocument<2048> doc;
-
-  DeserializationError error = deserializeJson(doc, readJSON);
+  DeserializationError error = deserializeJson(this->doc, readJSON);
 
   if (error) {
     Serial.print("[DB][E] deserializeJson() failed: ");
     Serial.println(error.c_str());
-    return;
+    return false; //error
   }
+  return true; //success
+}
 
-  const char* mac = doc["mac"]; // "00:00:5e:00:53:af"
-  const char* ap_ssid = doc["ap_ssid"]; // "admin"
-  const char* ap_pass = doc["ap_pass"]; // "admin"
-  const char* sta_ssid = doc["sta_ssid"]; // nullptr
-  const char* sta_pass = doc["sta_pass"]; // nullptr
-  const char* connection_mode = doc["connection_mode"]; // "AP"
+void DB_Manager_::initDeviceFromDB(SmartDevice *sDevice){
 
-  Serial.printf("mac: %s\n", mac);
+  sDevice->set_ap_pass(doc["ap_pass"]);
+  sDevice->set_ap_ssid(doc["ap_ssid"]);
+  sDevice->set_connection_mode(doc["connection_mode"]);
+  sDevice->set_mac(doc["mac"]);
+  sDevice->set_sta_ssid(doc["sta_ssid"]);
+  sDevice->set_sta_pass(doc["sta_pass"]);
 
   JsonObject ip_config = doc["ip_config"];
-  const char* ip_config_mode = ip_config["mode"]; // "Dynamic"
-  const char* ip_config_ip_address = ip_config["ip_address"]; // "192.168.1.234"
-  const char* ip_config_subred_mask_address = ip_config["subred_mask_address"]; // "255.255.255.0"
-  const char* ip_config_gateway_address = ip_config["gateway_address"]; // "192.168.1.1"
+  IpConfig ipConfig;
+  ipConfig.set_mode(ip_config["mode"]);
+  ipConfig.set_ip_address(ip_config["ip_address"]);
+  ipConfig.set_subred_mask_address(ip_config["subred_mask_address"]);
+  ipConfig.set_gateway_address(ip_config["gateway_address"]);
+  
+  sDevice->set_ip_config(ipConfig);
 
-  for (JsonObject used_gpio : doc["used_gpios"].as<JsonArray>()) {
-    int used_gpio_id = used_gpio["id"]; // 0, 1
-    int used_gpio_pin_number = used_gpio["pin_number"]; // 0, 25
-    const char* used_gpio_mode = used_gpio["mode"]; // "INPUT", "OUTPUT"
-    const char* used_gpio_label = used_gpio["label"]; // "Button on board", "LED on board"
-    const char* used_gpio_value = used_gpio["value"]; // "LOW", "LOW"
+  JsonArray used_gpios_from_doc = doc["used_gpios"].as<JsonArray>();
+  size_t size_used_gpios = used_gpios_from_doc.size();
+  this->set_size_used_gpios(size_used_gpios);  //TODO: probably have to set this in begin method
+  UsedGpio usedGpios[size_used_gpios];
+
+  Serial.printf("[DB][i]- Used GPIO(s): %d\n", size_used_gpios);
+
+  uint8_t index = 0;
+  for (JsonObject used_gpio : used_gpios_from_doc) {
+    usedGpios[index].set_id(used_gpio["id"]);
+    usedGpios[index].set_pin_number(used_gpio["pin_number"]);
+    usedGpios[index].set_mode(used_gpio["mode"]);
+    usedGpios[index].set_label(used_gpio["label"]);
+    usedGpios[index].set_value(used_gpio["value"]);
+    index++;
   }
 
-  for (JsonObject gpio : doc["gpios"].as<JsonArray>()) {
-    int gpio_id = gpio["id"]; // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
-    int gpio_pin_number = gpio["pin_number"]; // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ...
-    bool gpio_used = gpio["used"]; // true, false, false, false, false, false, false, false, false, false, ...
+  sDevice->set_used_gpios(usedGpios);
+
+
+  UsedGpio *usedGpios2 = sDevice->get_used_gpios();
+
+  for(int i = 0; i < size_used_gpios; i++){
+    Serial.println("----------------------------------");
+    Serial.printf("id: %d\n", usedGpios2[i].get_id());
+    Serial.printf("pin: %d\n", usedGpios2[i].get_pin_number());
+    Serial.printf("mode: %s\n", usedGpios2[i].get_mode());
+    Serial.printf("label: %s\n", usedGpios2[i].get_label());
+    Serial.printf("value: %s\n", usedGpios2[i].get_value());
+    Serial.println("----------------------------------");
+    Serial.println();
   }
+
+  JsonArray gpios_from_doc = doc["gpios"].as<JsonArray>();
+  size_t size_gpios = gpios_from_doc.size();
+  Serial.printf("gpio size: %d\n\n", size_gpios);
+  this->set_size_gpios(size_gpios);  //TODO: probably have to set this in begin method
+  Gpio gpios[size_gpios];
+
+  index = 0;
+  for (JsonObject gpio : gpios_from_doc) {
+    gpios[index].set_id(gpio["id"]);
+    gpios[index].set_pin_number(gpio["pin_number"]);
+    gpios[index].set_used(gpio["used"]);
+    index++;
+  }
+  sDevice->set_gpios(gpios);
+
 }
 
 DB_Manager_ &DB_Manager_::getInstance() {

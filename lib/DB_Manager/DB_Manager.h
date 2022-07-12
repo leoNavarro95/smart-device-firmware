@@ -1,20 +1,32 @@
 #pragma once
 
+#include<ArduinoJson.h>
+#include "../../include/SmartDevice_Model.hpp"
+
+#define DOC_SIZE 4096 // by tool: https://arduinojson.org/v6/assistant
 
 // Singleton pattern. In case of use a RTOS, need to be managed to be thread safe
 class DB_Manager_ {
 
 private:
     DB_Manager_() = default;
+    uint8_t size_used_gpios;
+    uint8_t size_gpios;
+    StaticJsonDocument<DOC_SIZE> doc;
 
 public:
     static DB_Manager_ &getInstance(); // Accessor for singleton instance
-
     DB_Manager_(const DB_Manager_ &) = delete; // no copying
     DB_Manager_ &operator=(const DB_Manager_ &) = delete;
 
-public:
-    void getUsedGPIOS();
+    bool begin( const char* database_path);
+    void initDeviceFromDB(SmartDevice *sDevice);
+
+    const uint8_t & get_size_used_gpios() const { return size_used_gpios; }
+    void set_size_used_gpios(const uint8_t & value) { this->size_used_gpios = value; }
+
+    const uint8_t & get_size_gpios() const { return size_gpios; }
+    void set_size_gpios(const uint8_t & value) { this->size_gpios = value; }
 };
 
 extern DB_Manager_ &DB;
