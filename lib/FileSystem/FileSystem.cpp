@@ -80,32 +80,23 @@ void FileSystem_::removeDir(fs::FS &fs, const char * path){
 // Reads the file defined by path. If success return string with content of file, else return empty string ("")
 String FileSystem_::readFile(fs::FS &fs, const char * path){
     Serial.printf("[Files][i]- Reading file: %s\r\n", path);
-
     File file = fs.open(path);
+
     if(!file || file.isDirectory()){
         Serial.println("[Files][E]- failed to open file for reading");
         return "";
     }
 
-    String data;
+    // explicit scope, it is freed from memory when code goes out
+    {    
+        String data;
 
-    // uint8_t size = file.size() + 1;
-    // Serial.printf("file size: %d\n", size);
-
-    // char _data[size];
-    // uint8_t index = 0;
-    while(file.available()){
-        data += (char) file.read();
-        // _data[index] = (char) file.read();
-        // index++;
+        while(file.available()){
+            data += (char) file.read();
+        }
+        file.close();
+        return data;
     }
-    file.close();
-    // Serial.printf("index: %d\n", index);
-    // Serial.printf("_data: %s\n", _data);
-
-    // char* data = &_data[0];
-    // char* data = "Fake data";
-    return data;
 }
 
 void FileSystem_::writeFile(fs::FS &fs, const char * path, const char * message){
