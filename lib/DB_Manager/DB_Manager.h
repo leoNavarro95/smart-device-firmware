@@ -22,8 +22,33 @@ public:
     bool begin( const char* database_path);
     void initDeviceFromDB(SmartDevice &sDevice);
 
-    const uint8_t & get_size_used_gpios() const { return size_used_gpios; }
-    void set_size_used_gpios(const uint8_t & value) { this->size_used_gpios = value; }
+    /**
+     * @brief Print all used gpios, just for debbuggin propose
+     * 
+     * @param used_gpios pointer to array with the used gpios
+     */
+    void printGpioArr( UsedGpio * used_gpios);
+    /**
+     * @brief Print all gpios status, just for debbuggin propose
+     * 
+     * @param gpios pointer to array with the gpios status
+     */
+    void printGpioArr( GpioStatus * gpios);
+    
+    /**
+     * @brief Attempts to set a new used gpio
+     * 
+     * @param sDevice device object to work with
+     * @param gpio new gpio instance for update
+     * @return ESP_OK if success, ESP_FAIL if fails
+     */
+    esp_err_t setUsedGpio( SmartDevice &sDevice, UsedGpio newUsedGpio);
+
+    // TODO falta por implementar
+    void removeUsedGpio( SmartDevice &sDevice, uint8_t idOfGpioToRemove);
+
+    const uint8_t & get_num_of_used_gpios() const { return size_used_gpios; }
+    void set_num_of_used_gpios(const uint8_t & value) { this->size_used_gpios = value; }
 
     const uint8_t & get_size_gpios() const { return size_gpios; }
     void set_size_gpios(const uint8_t & value) { this->size_gpios = value; }

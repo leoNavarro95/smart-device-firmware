@@ -25,15 +25,32 @@ SmartDevice sdevice;
 void setup(void)
 {
   Serial.begin(115200);
-  
+
   Files.begin();
   Files.listDir(LittleFS, "/", (uint8_t) 0);
 
   if(DB.begin("/database/esp_soc.json"))
     DB.initDeviceFromDB(sdevice);
+  
+  DB.printGpioArr(sdevice.get_gpios_status());
+  DB.printGpioArr(sdevice.get_used_gpios());
 
+  UsedGpio newUG1, newUG2;
+  newUG1.set_label("un led ahi");
+  newUG1.set_pin_number(10);
+  newUG1.set_mode("OUTPUT");
+  newUG1.set_value("LOW");
 
+  DB.setUsedGpio(sdevice, newUG1);
 
+  newUG2.set_label("Motor PWM");
+  newUG2.set_pin_number(5);
+  newUG2.set_mode("PWM");
+  newUG2.set_value("0");
+  DB.setUsedGpio(sdevice, newUG2);
+
+  DB.printGpioArr(sdevice.get_gpios_status());
+  DB.printGpioArr(sdevice.get_used_gpios());
 
 /*
   ConnectWiFi_STA();
