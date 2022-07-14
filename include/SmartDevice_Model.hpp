@@ -17,10 +17,17 @@
 #define MAX_SIZE_USED_GPIOS 30
 #define SIZE_GPIOS 30
 
-class Gpio {
+/**
+ * @brief Represent a gpio and if it is used or not.
+ *  This class will be used inside an array of objects of it. 
+ *  This array of @e GpioStatus represent all GPIOS in the system and its
+ *  availability.
+ * 
+ */
+class GpioStatus {
     public:
-    Gpio() = default;
-    virtual ~Gpio() = default;
+    GpioStatus() = default;
+    virtual ~GpioStatus() = default;
 
     private:
     uint8_t id;
@@ -93,6 +100,12 @@ class UsedGpio {
     void set_mode(const char * value) { snprintf(this->mode, MAX_SIZE_MODE, value); }
 
     const char * get_label() { return label; }
+
+    /**
+     * @brief Set the label object
+     * 
+     * @param value with less than MAX_SIZE_LABEL characters
+     */
     void set_label(const char * value) { snprintf(this->label, MAX_SIZE_LABEL, value); }
 
     const char * get_value() { return value; }
@@ -115,7 +128,7 @@ class SmartDevice {
     
     IpConfig ip_config;
     UsedGpio used_gpios[MAX_SIZE_USED_GPIOS];
-    Gpio gpios[SIZE_GPIOS];
+    GpioStatus gpios[SIZE_GPIOS];
 
     public:
     const char* get_mac() const { return mac; }
@@ -144,21 +157,21 @@ class SmartDevice {
     
     void set_used_gpios(UsedGpio* value, uint8_t size) {
         if(size >= MAX_SIZE_USED_GPIOS){
-            Serial.printf("[SmartD][E]- UsedGpio array size is bigger than reserved");
+            log_e("UsedGpio array size is bigger than reserved");
             return;
         } 
-        for(int i = 0; i < MAX_SIZE_USED_GPIOS; i++){
+        for(int i = 0; i < size; i++){
             this-> used_gpios[i] = value[i];
         }
     }
 
-    Gpio* get_gpios() { return gpios; }
-    void set_gpios(Gpio* value, uint8_t size) { 
+    GpioStatus* get_gpios_status() { return gpios; }
+    void set_gpios_status(GpioStatus* value, uint8_t size) { 
         if(size >= SIZE_GPIOS){
-            Serial.printf("[SmartD][E]- Gpio array size is bigger than reserved");
+            log_e("GpioStatus array size is bigger than reserved");
             return;
         }
-        for(int i = 0; i < SIZE_GPIOS; i++){
+        for(int i = 0; i < size; i++){
             this-> gpios[i] = value[i];
         }
     }
