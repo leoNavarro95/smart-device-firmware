@@ -1,5 +1,6 @@
 #include "DB_Manager.h"
 #include <Arduino.h>
+#include <WiFi.h>
 
 
 #include "FileSystem.h"
@@ -15,17 +16,99 @@
 
 
 bool DB_Manager_::begin(const char* database_path){
+
+  snprintf(this->path, MAX_SIZE_PATH, database_path);
+
   String readJSON = Files.readFile(LittleFS, database_path);
   // Serial.printf("contenido del archivo: %s\n", readJSON.c_str());
   
   DeserializationError error = deserializeJson(this->doc, readJSON);
 
   if (error) {
-    Serial.print("[DB][E] deserializeJson() failed: ");
-    Serial.println(error.c_str());
+    log_e("- deserializeJson failed: ");
+    // log_e(error.c_str()); //FIX: show error
     return false; //error
   }
   return true; //success
+}
+/**
+ * @brief Refresh the database with the SmartDevice data
+ * 
+ * @param sDevice The object with the data to refresh in the DB
+ * @param noExistFile Flag to generate file if no exist (default false)
+ * @return esp_err_t Return ESP_OK if success else return ESP_FAIL 
+ */
+esp_err_t DB_Manager_::refresh(SmartDevice &sDevice, bool noExistFile){
+  StaticJsonDocument<3072> output_doc;
+  const char* mac = WiFi.macAddress().c_str();
+
+  output_doc["mac"]             = noExistFile ? mac        : sDevice.get_mac();
+  output_doc["ap_ssid"]         = noExistFile ? "Admin"    : sDevice.get_ap_ssid();
+  output_doc["ap_pass"]         = noExistFile ? "12345678" : sDevice.get_ap_pass();
+  output_doc["sta_ssid"]        = noExistFile ? "StaAdmin" : sDevice.get_sta_ssid();
+  output_doc["sta_pass"]        = noExistFile ? "12345678" : sDevice.get_sta_pass();
+  output_doc["connection_mode"] = noExistFile ? "AP"       : sDevice.get_connection_mode();
+
+
+  JsonObject ip_config = output_doc.createNestedObject("ip_config");
+  IpConfig ipConfig;
+  
+  if(noExistFile){
+    ipConfig.set_ip_address("192.168.1.10");
+    ipConfig.set_gateway_address("192.168.1.1");
+    ipConfig.set_subred_mask_address("255.255.255.0");
+    ipConfig.set_mode("Static");
+  } else{
+    ipConfig = sDevice.get_ip_config();
+  }
+
+  ip_config["mode"] = ipConfig.get_mode();
+  ip_config["ip_address"] = ipConfig.get_ip_address();
+  ip_config["subred_mask_address"] = ipConfig.get_subred_mask_address();
+  ip_config["gateway_address"] = ipConfig.get_gateway_address();
+
+  //usedgpios
+  UsedGpio * usedGpios = sDevice.get_used_gpios();
+  uint8_t sizeUsedGpios = DB.get_num_of_used_gpios();
+  
+  JsonArray used_gpios = output_doc.createNestedArray("used_gpios");
+  
+  for(int i = 0; i < sizeUsedGpios; i++ ){
+    JsonObject used_gpio = used_gpios.createNestedObject();
+
+    used_gpio["id"] = usedGpios[i].get_id();
+    used_gpio["pin_number"] = usedGpios[i].get_pin_number();
+    used_gpio["mode"] = usedGpios[i].get_mode();
+    used_gpio["label"] = usedGpios[i].get_label();
+    used_gpio["value"] = usedGpios[i].get_value();
+  }
+
+  //gpio status
+  GpioStatus * gpiosStatus = sDevice.get_gpios_status();
+  //TODO: Buscar una forma, por ejemplo desde la web, de que el usuario setee la cantidad deseada de pines en caso de no existir el archivo de la base de datos
+  uint8_t sizeGpioStatus = 20; //DB.get_size_gpios() get the size of gpios by the database file, in this case the file does not exist so it's hardcoded
+
+  JsonArray gpios = output_doc.createNestedArray("gpios");
+
+  for(uint8_t i = 0; i < sizeGpioStatus; i++){
+    JsonObject gpio_status = gpios.createNestedObject();
+
+    gpio_status["id"]         = noExistFile ? i     : gpiosStatus[i].get_id();
+    gpio_status["pin_number"] = noExistFile ? i     : gpiosStatus[i].get_pin_number();
+    gpio_status["used"]       = noExistFile ? false : gpiosStatus[i].get_used();
+  }
+
+  // delete DB file if exist
+  if(!noExistFile)
+    if(!Files.deleteFile(LittleFS, this->path))
+      return ESP_FAIL;
+
+  int length = measureJson(output_doc);
+  char newData[length + 1];
+  serializeJson(output_doc, newData, sizeof(newData));
+  Files.writeFile(LittleFS, this->path, newData );
+
+  return ESP_OK;
 }
 
 void DB_Manager_::initDeviceFromDB( SmartDevice &sDevice ){
@@ -51,7 +134,7 @@ void DB_Manager_::initDeviceFromDB( SmartDevice &sDevice ){
   this->set_num_of_used_gpios(size_used_gpios);  //TODO: probably have to set this in begin method
   UsedGpio usedGpios[size_used_gpios];
 
-  Serial.printf("[DB][i]- Used GPIO(s): %d\n", size_used_gpios);
+  log_i("Used GPIO(s): %d", size_used_gpios);
 
   uint8_t index = 0;
   for (JsonObject used_gpio : used_gpios_from_doc) {
@@ -68,7 +151,8 @@ void DB_Manager_::initDeviceFromDB( SmartDevice &sDevice ){
   JsonArray gpios_from_doc = this->doc["gpios"].as<JsonArray>();
   size_t size_gpios = gpios_from_doc.size();
   
-  Serial.printf("gpio size: %d\n\n", size_gpios);
+  log_i("GPIO size: %d", size_gpios);
+
   this->set_size_gpios(size_gpios);  //TODO: probably have to set this in begin method
   GpioStatus gpios[size_gpios];
 
@@ -109,7 +193,6 @@ void DB_Manager_::printGpioArr(GpioStatus * gpios){
   }
 }
 
-//TODO: poner privado una funcion que escriba en la base de datos el nuevo gpio
 
 esp_err_t DB_Manager_::setUsedGpio( SmartDevice &sDevice, UsedGpio newUsedGpio ){
 
@@ -119,7 +202,8 @@ esp_err_t DB_Manager_::setUsedGpio( SmartDevice &sDevice, UsedGpio newUsedGpio )
 
   //check if size of gpio is in range
   if(gpio_index > size_gpios){
-    log_w("Trying to use new gpio out of range");
+    // log_w("Trying to set new gpio out of range.\n Current total number of gpios: %d\n New GPIO: %d", size_gpios, gpio_index);
+    log_w("New gpio out of range");
     return ESP_FAIL;
   }
 
@@ -144,8 +228,13 @@ esp_err_t DB_Manager_::setUsedGpio( SmartDevice &sDevice, UsedGpio newUsedGpio )
   //set used status to true
   gpios[gpio_index].set_used(true);
 
-  log_d("Inserted new gpio successfuly");
-  return ESP_OK;
+  if(this->refresh(sDevice) == ESP_OK){
+    log_d("Inserted new gpio in DB successfuly");
+    return ESP_OK;
+  }
+
+  log_e("Error inserting new gpio in DB");
+  return ESP_FAIL;
 }
 
 

@@ -4,6 +4,7 @@
 #include "../../include/SmartDevice_Model.hpp"
 
 #define DOC_SIZE 4096 // by tool: https://arduinojson.org/v6/assistant
+#define MAX_SIZE_PATH 46
 
 // Singleton pattern. In case of use a RTOS, need to be managed to be thread safe
 class DB_Manager_ {
@@ -13,6 +14,8 @@ private:
     uint8_t size_used_gpios;
     uint8_t size_gpios;
     StaticJsonDocument<DOC_SIZE> doc;
+    char path[MAX_SIZE_PATH];
+    esp_err_t refresh(SmartDevice &sDevice, bool noDB = false);
 
 public:
     static DB_Manager_ &getInstance(); // Accessor for singleton instance
@@ -21,6 +24,7 @@ public:
 
     bool begin( const char* database_path);
     void initDeviceFromDB(SmartDevice &sDevice);
+    void createDefault(SmartDevice &sDevice){this->refresh(sDevice, true);}
 
     /**
      * @brief Print all used gpios, just for debbuggin propose

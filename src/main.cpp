@@ -1,5 +1,3 @@
-
-
 #include <Arduino.h>
 
 #include <WiFi.h>
@@ -29,54 +27,44 @@ void setup(void)
   Files.begin();
   Files.listDir(LittleFS, "/", (uint8_t) 0);
 
-  if(DB.begin("/database/esp_soc.json"))
+  if(DB.begin("/database/test.json")){
     DB.initDeviceFromDB(sdevice);
-  
-  DB.printGpioArr(sdevice.get_gpios_status());
-  DB.printGpioArr(sdevice.get_used_gpios());
+  } 
+  else{
+    DB.createDefault(sdevice);
+    log_w("Creating default database file");
+    DB.initDeviceFromDB(sdevice);
+  }
 
   UsedGpio newUG1, newUG2;
-  newUG1.set_label("un led ahi");
+  newUG1.set_label("Otra cosa rara");
   newUG1.set_pin_number(10);
   newUG1.set_mode("OUTPUT");
   newUG1.set_value("LOW");
 
   DB.setUsedGpio(sdevice, newUG1);
 
-  newUG2.set_label("Motor PWM");
-  newUG2.set_pin_number(5);
+  newUG2.set_label("LED dimmer");
+  newUG2.set_pin_number(8);
   newUG2.set_mode("PWM");
-  newUG2.set_value("0");
+  newUG2.set_value("255");
   DB.setUsedGpio(sdevice, newUG2);
 
-  DB.printGpioArr(sdevice.get_gpios_status());
-  DB.printGpioArr(sdevice.get_used_gpios());
+  // DB.printGpioArr(sdevice.get_gpios_status());
+  // DB.printGpioArr(sdevice.get_used_gpios());
 
-/*
   ConnectWiFi_STA();
 
   InitServer();
   InitWebSockets();
-*/
+
   pinMode(IO0, INPUT_PULLUP);
   pinMode(LED_BUILTIN, OUTPUT);
 }
 
-uint8_t actState = 0;
-uint8_t prevState = 0;
-
 
 void loop(void)
 { 
-  /*
-  actState = digitalRead(IO0);
 
-  if(prevState != actState){
-  updateGPIO("D0", actState);
-  prevState = actState;
-  }
-
-  vTaskDelay(100);
-  */
 }
 
