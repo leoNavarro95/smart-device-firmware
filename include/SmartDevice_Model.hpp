@@ -8,10 +8,9 @@
 #define MAX_SIZE_SSID 32
 #define MAX_SIZE_PASS 31
 
-#define MAX_SIZE_IP_MODE 4
+#define MAX_SIZE_IP_MODE 8  // Static | Dynamic
 #define MAX_SIZE_IP_ADDRESS 15
-#define MAX_SIZE_IP_MASK 15
-#define MAX_SIZE_IP_GATEWAY 15
+
 
 
 #define MAX_SIZE_USED_GPIOS 30
@@ -56,8 +55,8 @@ class IpConfig {
     private:
     char mode[MAX_SIZE_IP_MODE]; //Static|Dynamic
     char ip_address[MAX_SIZE_IP_ADDRESS]; // 111.111.111.111
-    char subred_mask_address[MAX_SIZE_IP_MASK];
-    char gateway_address[MAX_SIZE_IP_GATEWAY];
+    char subnet_mask[MAX_SIZE_IP_ADDRESS];
+    char gateway_address[MAX_SIZE_IP_ADDRESS];
     // TODO: DNS address
 
     public:
@@ -67,11 +66,11 @@ class IpConfig {
     const char* get_ip_address() const { return ip_address; }
     void set_ip_address(const char* value) { snprintf(this->ip_address, MAX_SIZE_IP_ADDRESS, value);}
 
-    const char* get_subred_mask_address() const { return subred_mask_address; }
-    void set_subred_mask_address(const char* value) { snprintf(this->subred_mask_address, MAX_SIZE_IP_MASK, value);}
+    const char* get_subnet_mask() const { return subnet_mask; }
+    void set_subnet_mask(const char* value) { snprintf(this->subnet_mask, MAX_SIZE_IP_ADDRESS, value);}
     
     const char* get_gateway_address() const { return gateway_address; }
-    void set_gateway_address(const char* value) { snprintf(this->gateway_address, MAX_SIZE_IP_GATEWAY, value);}
+    void set_gateway_address(const char* value) { snprintf(this->gateway_address, MAX_SIZE_IP_ADDRESS, value);}
 
 };
 
