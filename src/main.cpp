@@ -5,19 +5,21 @@
 
 #include "FileSystem.h"
 #include "DB_Manager.h"
-#include"SmartDevice_Model.hpp"
+#include "SmartDevice_Model.hpp"
+#include "Utils/Wifi_Manager.hpp"
 
-#include "config.h"  // Sustituir con datos de la red 
+// #include "config.h"  // Sustituir con datos de la red 
 #include "API.hpp"
 #include "WebSockets.hpp"
 #include "Server.hpp"
-#include "ESP32_Utils.hpp"
+// #include "ESP32_Utils.hpp"
 #include "ESP32_Utils_AWS.hpp"
 
 
 #define IO0 0
 
 SmartDevice sdevice;
+WifiManager myWifi;
 
 
 void setup(void)
@@ -27,8 +29,9 @@ void setup(void)
   Files.begin();
   Files.listDir(LittleFS, "/", (uint8_t) 0);
 
-  if(DB.begin("/database/test.json")){
+  if(DB.begin("/database/esp_soc.json")){
     DB.initDeviceFromDB(sdevice);
+    log_d("Device inited from database");
   } 
   else{
     DB.createDefault(sdevice);
@@ -41,7 +44,6 @@ void setup(void)
   newUG1.set_pin_number(10);
   newUG1.set_mode("OUTPUT");
   newUG1.set_value("LOW");
-
   DB.setUsedGpio(sdevice, newUG1);
 
   newUG2.set_label("LED dimmer");
@@ -50,10 +52,7 @@ void setup(void)
   newUG2.set_value("255");
   DB.setUsedGpio(sdevice, newUG2);
 
-  // DB.printGpioArr(sdevice.get_gpios_status());
-  // DB.printGpioArr(sdevice.get_used_gpios());
-
-  ConnectWiFi_STA();
+  myWifi.begin( sdevice );
 
   InitServer();
   InitWebSockets();
