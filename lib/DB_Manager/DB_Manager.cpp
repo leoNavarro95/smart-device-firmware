@@ -35,36 +35,33 @@ bool DB_Manager_::begin(const char* database_path){
  * @brief Refresh the database with the SmartDevice data
  * 
  * @param sDevice The object with the data to refresh in the DB
- * @param noExistFile Flag to generate file if no exist (default false)
+ * @param newFileNeeded Flag to generate file if no exist (default false)
  * @return esp_err_t Return ESP_OK if success else return ESP_FAIL 
  */
-esp_err_t DB_Manager_::refresh(SmartDevice &sDevice, bool noExistFile){
+esp_err_t DB_Manager_::refresh(SmartDevice &sDevice, bool newFileNeeded){
   StaticJsonDocument<3072> output_doc;
   const char* mac = WiFi.macAddress().c_str();
 
-  output_doc["mac"]             = noExistFile ? mac        : sDevice.get_mac();
-  output_doc["ap_ssid"]         = noExistFile ? "Admin"    : sDevice.get_ap_ssid();
-  output_doc["ap_pass"]         = noExistFile ? "12345678" : sDevice.get_ap_pass();
-  output_doc["sta_ssid"]        = noExistFile ? "StaAdmin" : sDevice.get_sta_ssid();
-  output_doc["sta_pass"]        = noExistFile ? "12345678" : sDevice.get_sta_pass();
-  output_doc["connection_mode"] = noExistFile ? "AP"       : sDevice.get_connection_mode();
+  output_doc["mac"]             = newFileNeeded ? mac        : sDevice.get_mac();
+  output_doc["ap_ssid"]         = newFileNeeded ? "Admin"    : sDevice.get_ap_ssid();
+  output_doc["ap_pass"]         = newFileNeeded ? "12345678" : sDevice.get_ap_pass();
+  output_doc["sta_ssid"]        = newFileNeeded ? "StaAdmin" : sDevice.get_sta_ssid();
+  output_doc["sta_pass"]        = newFileNeeded ? "12345678" : sDevice.get_sta_pass();
+  output_doc["connection_mode"] = newFileNeeded ? "AP"       : sDevice.get_connection_mode();
 
 
   JsonObject ip_config = output_doc.createNestedObject("ip_config");
   IpConfig ipConfig;
   
-  if(noExistFile){
-    ipConfig.set_ip_address("192.168.1.10");
-    ipConfig.set_gateway_address("192.168.1.1");
-    ipConfig.set_subred_mask_address("255.255.255.0");
-    ipConfig.set_mode("Static");
+  if(newFileNeeded){
+    ipConfig.set_mode("Dynamic");
   } else{
     ipConfig = sDevice.get_ip_config();
   }
 
   ip_config["mode"] = ipConfig.get_mode();
   ip_config["ip_address"] = ipConfig.get_ip_address();
-  ip_config["subred_mask_address"] = ipConfig.get_subred_mask_address();
+  ip_config["subred_mask_address"] = ipConfig.get_subnet_mask();
   ip_config["gateway_address"] = ipConfig.get_gateway_address();
 
   //usedgpios
@@ -93,13 +90,13 @@ esp_err_t DB_Manager_::refresh(SmartDevice &sDevice, bool noExistFile){
   for(uint8_t i = 0; i < sizeGpioStatus; i++){
     JsonObject gpio_status = gpios.createNestedObject();
 
-    gpio_status["id"]         = noExistFile ? i     : gpiosStatus[i].get_id();
-    gpio_status["pin_number"] = noExistFile ? i     : gpiosStatus[i].get_pin_number();
-    gpio_status["used"]       = noExistFile ? false : gpiosStatus[i].get_used();
+    gpio_status["id"]         = newFileNeeded ? i     : gpiosStatus[i].get_id();
+    gpio_status["pin_number"] = newFileNeeded ? i     : gpiosStatus[i].get_pin_number();
+    gpio_status["used"]       = newFileNeeded ? false : gpiosStatus[i].get_used();
   }
 
   // delete DB file if exist
-  if(!noExistFile)
+  if(!newFileNeeded)
     if(!Files.deleteFile(LittleFS, this->path))
       return ESP_FAIL;
 
@@ -116,7 +113,7 @@ void DB_Manager_::initDeviceFromDB( SmartDevice &sDevice ){
   sDevice.set_ap_pass(this->doc["ap_pass"]);
   sDevice.set_ap_ssid(this->doc["ap_ssid"]);
   sDevice.set_connection_mode(this->doc["connection_mode"]);
-  sDevice.set_mac(this->doc["mac"]);
+  // sDevice.set_mac(this->doc["mac"]); // mac can only be set by WiFi driver info
   sDevice.set_sta_ssid(this->doc["sta_ssid"]);
   sDevice.set_sta_pass(this->doc["sta_pass"]);
 
@@ -124,7 +121,7 @@ void DB_Manager_::initDeviceFromDB( SmartDevice &sDevice ){
   IpConfig ipConfig;
   ipConfig.set_mode(ip_config["mode"]);
   ipConfig.set_ip_address(ip_config["ip_address"]);
-  ipConfig.set_subred_mask_address(ip_config["subred_mask_address"]);
+  ipConfig.set_subnet_mask(ip_config["subred_mask_address"]);
   ipConfig.set_gateway_address(ip_config["gateway_address"]);
   
   sDevice.set_ip_config(ipConfig);

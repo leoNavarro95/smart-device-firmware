@@ -15,7 +15,6 @@ private:
     uint8_t size_gpios;
     StaticJsonDocument<DOC_SIZE> doc;
     char path[MAX_SIZE_PATH];
-    esp_err_t refresh(SmartDevice &sDevice, bool noDB = false);
 
 public:
     static DB_Manager_ &getInstance(); // Accessor for singleton instance
@@ -24,11 +23,15 @@ public:
 
     bool begin( const char* database_path);
     void initDeviceFromDB(SmartDevice &sDevice);
+    esp_err_t refresh(SmartDevice &sDevice, bool newFile = false);
     void createDefault(SmartDevice &sDevice){this->refresh(sDevice, true);}
 
     /**
      * @brief Print all used gpios, just for debbuggin propose
-     * 
+     * @attention usage 
+     * @code {.cpp}
+     *  DB.printGpioArr(sdevice.get_gpios_status());
+     * @endcode
      * @param used_gpios pointer to array with the used gpios
      */
     void printGpioArr( UsedGpio * used_gpios);
