@@ -1,15 +1,15 @@
 {
-    "mac": "11:00:5e:00:53:af",
-    "ap_ssid": "admin",
-    "ap_pass": "admin",
-    "sta_ssid": "StaSSID",
-    "sta_pass": "STA_PASS",
-    "connection_mode": "AP",
+    "mac": "",
+    "ap_ssid": "smart device",
+    "ap_pass": "",
+    "sta_ssid": "Anonymous",
+    "sta_pass": "12345678",
+    "connection_mode": "STA",
     "ip_config": {
         "mode": "Dynamic",
-        "ip_address": "192.168.1.234",
-        "subred_mask_address": "255.255.255.0",
-        "gateway_address": "192.168.1.1"
+        "ip_address": "",
+        "subred_mask_address": "",
+        "gateway_address": ""
     },
     "used_gpios": [
         {
