@@ -170,7 +170,7 @@ class SmartDevice {
             log_e("GpioStatus array size is bigger than reserved");
             return;
         }
-        for(int i = 0; i < size; i++){
+        for(int i = 0; i < SIZE_GPIOS; i++){
             this-> gpios[i] = value[i];
         }
     }

@@ -51,7 +51,6 @@ public:
      */
     esp_err_t setUsedGpio( SmartDevice &sDevice, UsedGpio newUsedGpio);
 
-    // TODO falta por implementar
     void removeUsedGpio( SmartDevice &sDevice, uint8_t idOfGpioToRemove);
 
     const uint8_t & get_num_of_used_gpios() const { return size_used_gpios; }

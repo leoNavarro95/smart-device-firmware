@@ -4,7 +4,7 @@
 
 
 #include "FileSystem.h"
-
+#include "../../include/Utils/Math.hpp" 
 
 //Codigo apoyado por herramienta https://arduinojson.org/v6/assistant
 
@@ -234,6 +234,34 @@ esp_err_t DB_Manager_::setUsedGpio( SmartDevice &sDevice, UsedGpio newUsedGpio )
   return ESP_FAIL;
 }
 
+void DB_Manager_::removeUsedGpio( SmartDevice &sDevice, uint8_t idOfGpioToRemove){
+  UsedGpio *used_gpios = sDevice.get_used_gpios();
+  uint8_t _size_used_gpios = DB.get_num_of_used_gpios();
+  uint8_t decremented_size = _size_used_gpios - 1;
+
+  if(_size_used_gpios == 0){
+    log_d("There aren't gpios in the array to remove");
+    return;
+  } else if( _size_used_gpios > MAX_SIZE_USED_GPIOS){
+    log_d("Used gpio id it is bigger than MAX_SIZE_USED_GPIOS");
+    return;
+  }
+
+  GpioStatus * gpios = sDevice.get_gpios_status();
+  uint8_t _size_gpios_status = DB.get_size_gpios();
+
+  gpios[used_gpios[idOfGpioToRemove].get_pin_number()].set_used(false);
+  
+  log_d("SIZE: %d, SIZE - 1: %d", _size_used_gpios, decremented_size);
+
+  remove_element(used_gpios, idOfGpioToRemove, _size_used_gpios);
+  DB.set_num_of_used_gpios( decremented_size );
+  
+  sDevice.set_gpios_status(gpios, _size_gpios_status);
+  sDevice.set_used_gpios(used_gpios, decremented_size);
+
+  DB.refresh(sDevice);
+}
 
 DB_Manager_ &DB_Manager_::getInstance() {
   static DB_Manager_ instance;

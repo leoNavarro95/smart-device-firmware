@@ -51,14 +51,13 @@ void setup(void)
   newUG2.set_mode("PWM");
   newUG2.set_value("255");
   DB.setUsedGpio(sdevice, newUG2);
-
+  
   myWifi.begin( sdevice );
 
   InitServer();
   InitWebSockets();
 
-  pinMode(IO0, INPUT_PULLUP);
-  pinMode(LED_BUILTIN, OUTPUT);
+  DB.removeUsedGpio(sdevice, 0);
 }
 
 
