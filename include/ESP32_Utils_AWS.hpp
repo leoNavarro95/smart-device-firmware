@@ -1,14 +1,16 @@
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){ 
 	if(type == WS_EVT_CONNECT){
-		Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
+		log_d("ws[%s][%u] connect", server->url(), client->id());
 		client->printf("{\"message\": \"Hello Client %u\"}", client->id());
+		//enviar trama con todos los datos
+		
 		client->ping();
 	} else if(type == WS_EVT_DISCONNECT){
-		Serial.printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+		log_d("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
 	} else if(type == WS_EVT_ERROR){
-		Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+		log_d("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
 	} else if(type == WS_EVT_PONG){
-		Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+		log_d("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
 	} else if(type == WS_EVT_DATA){
 		AwsFrameInfo * info = (AwsFrameInfo*)arg;
 		String msg = "";
@@ -41,7 +43,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 					msg += buff ;
 				}
 			}
-			Serial.printf("%s\n",msg.c_str());
+			log_d("%s\n",msg.c_str());
 
 			if((info->index + len) == info->len){
 				if(info->final){
