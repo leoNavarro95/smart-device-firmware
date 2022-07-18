@@ -6,7 +6,10 @@ void ProcessRequest(AsyncWebSocketClient *client, String request)
 {
   StaticJsonDocument<200> doc;
   DeserializationError error = deserializeJson(doc, request);
-  if (error) { return; }
+  if (error) { 
+    log_d("Deserialize Json error: %s", error.c_str());
+    return; 
+  }
   
   String command = doc["command"];
   if(command == "setGPIO") 
@@ -33,3 +36,6 @@ void updateGPIO(String input, bool value)
   Serial.println(value ? String(" ON") : String(" OFF"));
 }
 
+// void sendStatus(){
+
+// }
