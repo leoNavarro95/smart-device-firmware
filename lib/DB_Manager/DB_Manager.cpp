@@ -15,7 +15,7 @@
 
 
 
-bool DB_Manager_::begin(const char* database_path){
+void DB_Manager_::begin(const char* database_path, SmartDevice &sDevice){
 
   snprintf(this->path, MAX_SIZE_PATH, database_path);
 
@@ -25,11 +25,15 @@ bool DB_Manager_::begin(const char* database_path){
   DeserializationError error = deserializeJson(this->doc, readJSON);
 
   if (error) {
-    log_e("- deserializeJson failed: ");
-    // log_e(error.c_str()); //FIX: show error
-    return false; //error
+    log_e("- deserializeJson failed: %s", error.c_str());
+    DB.createDefault(sDevice);
+    log_w("Creating default database file");
+    DB.initDeviceFromDB(sDevice);
+    return;
   }
-  return true; //success
+  
+  DB.initDeviceFromDB(sDevice);
+  log_d("Device inited from database");
 }
 /**
  * @brief Refresh the database with the SmartDevice data

@@ -21,7 +21,7 @@ public:
     DB_Manager_(const DB_Manager_ &) = delete; // no copying
     DB_Manager_ &operator=(const DB_Manager_ &) = delete;
 
-    bool begin( const char* database_path);
+    void begin( const char* database_path, SmartDevice &sDevice);
     void initDeviceFromDB(SmartDevice &sDevice);
     esp_err_t refresh(SmartDevice &sDevice, bool newFile = false);
     void createDefault(SmartDevice &sDevice){this->refresh(sDevice, true);}

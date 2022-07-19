@@ -29,18 +29,10 @@ void setup(void)
   Files.begin();
   Files.listDir(LittleFS, "/", (uint8_t) 0);
 
-  if(DB.begin("/database/esp_soc.json")){
-    DB.initDeviceFromDB(sdevice);
-    log_d("Device inited from database");
-  } 
-  else{
-    DB.createDefault(sdevice);
-    log_w("Creating default database file");
-    DB.initDeviceFromDB(sdevice);
-  }
-
+  DB.begin("/database/esp_soc.json", sdevice);
+/*
   UsedGpio newUG1, newUG2;
-  newUG1.set_label("Otra cosa rara");
+  newUG1.set_label("RELE");
   newUG1.set_pin_number(10);
   newUG1.set_mode("OUTPUT");
   newUG1.set_value("LOW");
@@ -51,13 +43,14 @@ void setup(void)
   newUG2.set_mode("PWM");
   newUG2.set_value("255");
   DB.setUsedGpio(sdevice, newUG2);
-  
+*/
+  // DB.removeUsedGpio(sdevice, 0);
+
   myWifi.begin( sdevice );
 
   InitServer();
   InitWebSockets();
 
-  DB.removeUsedGpio(sdevice, 0);
 }
 
 
