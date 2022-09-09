@@ -148,6 +148,30 @@ class SmartDevice {
     const char* get_connection_mode() const { return connection_mode; }
     void set_connection_mode(const char* value) { snprintf(this->connection_mode, MAX_SIZE_CONN_MODE, value);}
 
+    /**
+     * @brief Get the wifi ssid for the current connection mode
+     * 
+     * @return const char* 
+     */
+    const char* get_wifi_ssid() const {
+        if( strcmp(this->connection_mode, "STA" ) == 0 )
+            return sta_ssid;
+        else
+            return ap_ssid;
+    }
+
+    /**
+     * @brief Get the wifi pass for the current connection mode
+     * 
+     * @return const char* 
+     */
+    const char* get_wifi_pass() const {
+        if( strcmp(this->connection_mode, "STA" ) == 0 )
+            return sta_pass;
+        else
+            return ap_pass;
+    }
+
     const IpConfig & get_ip_config() const { return ip_config; }
     IpConfig & get_mutable_ip_config() { return ip_config; }
     void set_ip_config(const IpConfig & value) { this->ip_config = value; }

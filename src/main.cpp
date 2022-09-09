@@ -8,19 +8,12 @@
 #include "SmartDevice_Model.hpp"
 #include "Utils/Wifi_Manager.hpp"
 
-// #include "config.h"  // Sustituir con datos de la red 
-#include "API.hpp"
-#include "WebSockets.hpp"
-#include "Server.hpp"
-// #include "ESP32_Utils.hpp"
-#include "ESP32_Utils_AWS.hpp"
+#include "WebSocket.hpp"
 
-
-#define IO0 0
 
 SmartDevice sdevice;
 WifiManager myWifi;
-
+WebSocket   websocket;
 
 void setup(void)
 {
@@ -45,12 +38,13 @@ void setup(void)
   DB.setUsedGpio(sdevice, newUG2);
 */
   // DB.removeUsedGpio(sdevice, 0);
-
+  sdevice.set_sta_pass("123456789");
   myWifi.begin( sdevice );
 
   InitServer();
-  InitWebSockets();
+  websocket.init( sdevice );
 
+  websocket.updateGPIO("mi id", true);
 }
 
 
