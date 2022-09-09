@@ -15,7 +15,11 @@
 
 
 
-void DB_Manager_::begin(const char* database_path, SmartDevice &sDevice){
+void DB_Manager_::begin(const char* database_path, SmartDevice &sDevice) 
+{
+  
+  Files.begin();
+  Files.listDir(LittleFS, "/", (uint8_t) 0);
 
   snprintf(this->path, MAX_SIZE_PATH, database_path);
 

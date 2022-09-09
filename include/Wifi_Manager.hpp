@@ -1,9 +1,13 @@
 #pragma once
 
 #include<WiFi.h>
+#include <ESPAsyncWebServer.h>
 
 #include "SmartDevice_Model.hpp"
 #include "DB_Manager.h"
+#include "Websocket.hpp"
+
+WebSocket   websocket;
 
 class WifiManager
 {
@@ -128,5 +132,9 @@ public:
         }
         
         DB.refresh( sDevice );
+
+        InitServer();
+        websocket.init( sDevice );
+
     }
 };

@@ -1,3 +1,6 @@
+#include "FS.h"
+#include <LittleFS.h>
+
 AsyncWebServer server(80);
 
 void InitServer()

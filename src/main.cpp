@@ -1,26 +1,15 @@
 #include <Arduino.h>
 
-#include <WiFi.h>
-#include <ESPAsyncWebServer.h>
-
-#include "FileSystem.h"
 #include "DB_Manager.h"
 #include "SmartDevice_Model.hpp"
-#include "Utils/Wifi_Manager.hpp"
-
-#include "WebSocket.hpp"
-
+#include "Wifi_Manager.hpp"
 
 SmartDevice sdevice;
 WifiManager myWifi;
-WebSocket   websocket;
 
 void setup(void)
 {
   Serial.begin(115200);
-
-  Files.begin();
-  Files.listDir(LittleFS, "/", (uint8_t) 0);
 
   DB.begin("/database/esp_soc.json", sdevice);
 /*
@@ -40,9 +29,6 @@ void setup(void)
   // DB.removeUsedGpio(sdevice, 0);
   sdevice.set_sta_pass("123456789");
   myWifi.begin( sdevice );
-
-  InitServer();
-  websocket.init( sdevice );
 
   websocket.updateGPIO("mi id", true);
 }
